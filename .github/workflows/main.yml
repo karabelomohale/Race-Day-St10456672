@@ -1,0 +1,55 @@
+name: Part 1 - Documentation & Structure Validation
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  validate-repository:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate /docs Directory Existence
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "::error::The /docs directory is missing from repository root!"
+            exit 1
+          fi
+          echo " /docs directory exists."
+
+      - name: Validate Required Planning Deliverables
+        run: |
+          echo "Checking required files inside /docs..."
+          
+          # Check for SQL Script
+          if ! ls docs/*.sql 1> /dev/null 2>&1; then
+            echo "::error::Missing .sql script in /docs folder."
+            exit 1
+          fi
+
+          # Check for ERD image or PDF
+          if ! ls docs/*.png docs/*.pdf docs/*.jpg 1> /dev/null 2>&1; then
+            echo "::error::Missing ERD diagram (PNG, JPG, or PDF) in /docs folder."
+            exit 1
+          fi
+
+          # Check for Endpoint Plan
+          if ! ls docs/*endpoint* docs/*api* 1> /dev/null 2>&1; then
+            echo "::error::Missing API Endpoint Plan document in /docs folder."
+            exit 1
+          fi
+
+          echo " All required planning documents are present."
+
+      - name: Validate README File
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "::error::Root README.md is missing!"
+            exit 1
+          fi
+          echo " README.md verified."
