@@ -1,0 +1,78 @@
+name: Part 1 - Documentation & Structure Validation
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  validate-repository:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify /docs Directory Exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "::error::The 'docs' directory was not found in the root of your repository."
+            echo "Please create a folder named 'docs' and move your planning files inside it."
+            exit 1
+          fi
+          echo "Found 'docs' directory."
+
+      - name: Verify SQL Database Script
+        run: |
+          shopt -s nocaseglob
+          SQL_FILES=(docs/*.sql)
+          if [ ! -e "${SQL_FILES[0]}" ]; then
+            echo "::error::No .sql file found in the 'docs' directory."
+            exit 1
+          fi
+          echo "Found SQL script: ${SQL_FILES[0]}"
+
+      - name: Verify ERD Diagram File
+        run: |
+          shopt -s nocaseglob
+          ERD_FILES=(docs/*.png docs/*.jpg docs/*.jpeg docs/*.pdf)
+          FOUND=0
+          for f in "${ERD_FILES[@]}"; do
+            if [ -e "$f" ]; then
+              echo "Found ERD file: $f"
+              FOUND=1
+              break
+            fi
+          done
+
+          if [ $FOUND -eq 0 ]; then
+            echo "::error::No ERD file (.png, .jpg, or .pdf) found in the 'docs' directory."
+            exit 1
+          fi
+
+      - name: Verify API Endpoint Plan
+        run: |
+          shopt -s nocaseglob
+          DOC_FILES=(docs/*api* docs/*endpoint* docs/*plan*)
+          FOUND=0
+          for f in "${DOC_FILES[@]}"; do
+            if [ -e "$f" ]; then
+              echo "Found API Endpoint Plan: $f"
+              FOUND=1
+              break
+            fi
+          done
+
+          if [ $FOUND -eq 0 ]; then
+            echo "::error::No API Endpoint Plan document found in the 'docs' directory. Ensure it has 'api' or 'endpoint' or 'plan' in the filename."
+            exit 1
+          fi
+
+      - name: Verify README File
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "::error::Root README.md is missing!"
+            exit 1
+          fi
+          echo "Found README.md."
