@@ -1,0 +1,22 @@
+# RaceDay RESTful API Endpoint Specification Plan
+
+| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **POST** | `/api/auth/register` | Registers a new user account as an Organiser or Participant. | None (Public) | `{"email": "string", "password": "string", "firstName": "string", "lastName": "string", "role": "string", "phoneNumber": "string"}` | `201 Created` - User profile object<br>`400 Bad Request` - Validation error<br>`409 Conflict` - Email already registered |
+| **POST** | `/api/auth/login` | Authenticates credentials and issues a JWT token. | None (Public) | `{"email": "string", "password": "string"}` | `200 OK` - `{"token": "string", "expiresIn": 3600, "role": "string"}`<br>`401 Unauthorized` - Invalid credentials |
+| **GET** | `/api/users/profile` | Retrieves current logged-in user profile details. | Any (Authenticated) | None | `200 OK` - User object<br>`401 Unauthorized` |
+| **PUT** | `/api/users/profile` | Updates user details, emergency contact, and club name. | Any (Authenticated) | `{"firstName": "string", "lastName": "string", "phoneNumber": "string", "emergencyContact": "string", "clubName": "string"}` | `200 OK` - Updated user object<br>`400 Bad Request`<br>`401 Unauthorized` |
+| **GET** | `/api/events` | Retrieves all published events with optional filtering. | None (Public) | None | `200 OK` - Array of Event objects |
+| **GET** | `/api/events/{id}` | Retrieves detailed event information including categories and route. | None (Public) | None | `200 OK` - Event detail object<br>`404 Not Found` |
+| **POST** | `/api/events` | Creates a new event. | Organiser | `{"title": "string", "eventType": "Running", "eventDate": "2026-11-01", "location": "string", "province": "Gauteng", "description": "string"}` | `201 Created` - Created event object<br>`400 Bad Request`<br>`403 Forbidden` |
+| **PUT** | `/api/events/{id}` | Updates existing event details. | Organiser | `{"title": "string", "eventDate": "2026-11-01", "location": "string", "description": "string", "status": "string"}` | `200 OK` - Updated event object<br>`403 Forbidden`<br>`404 Not Found` |
+| **DELETE** | `/api/events/{id}` | Deletes or cancels an event. | Organiser | None | `204 No Content`<br>`403 Forbidden`<br>`404 Not Found` |
+| **GET** | `/api/events/{eventId}/categories` | Retrieves all race categories/distances for an event. | None (Public) | None | `200 OK` - Array of Category objects |
+| **POST** | `/api/events/{eventId}/categories` | Adds a new distance/category to an event. | Organiser | `{"categoryName": "42.2km", "distanceKm": 42.2, "entryFee": 350.00, "maxParticipants": 5000, "cutoffTime": "06:00:00"}` | `201 Created` - Category object<br>`400 Bad Request`<br>`403 Forbidden` |
+| **POST** | `/api/enrolments` | Enrols a participant into a specific race category. | Participant | `{"categoryId": 1, "emergencyContact": "string", "medicalAid": "string"}` | `201 Created` - Enrolment record with assigned Race Number<br>`400 Bad Request` - Capacity reached<br>`409 Conflict` - Already enrolled |
+| **GET** | `/api/enrolments/my-enrolments` | Lists all active and past race enrolments for the logged-in participant. | Participant | None | `200 OK` - Array of user Enrolment records<br>`401 Unauthorized` |
+| **GET** | `/api/events/{eventId}/enrolments` | View all participant registrations and stats for an event. | Organiser | None | `200 OK` - Array of Enrolment records with participant names<br>`403 Forbidden`<br>`404 Not Found` |
+| **POST** | `/api/results` | Captures or imports participant finish times and official placings. | Organiser | `{"enrolmentId": 1, "finishTime": "03:14:22", "overallPosition": 142, "categoryPosition": 12, "status": "Finished"}` | `201 Created` - Result record<br>`400 Bad Request`<br>`403 Forbidden` |
+| **GET** | `/api/results/event/{eventId}` | Fetches public race leaderboard/results for an event. | None (Public) | None | `200 OK` - Array of leaderboard results filtered by category |
+| **GET** | `/api/results/my-results` | Fetches historical performance results for the logged-in participant. | Participant | None | `200 OK` - Array of personal Result objects<br>`401 Unauthorized` |
+| **GET** | `/api/events/{eventId}/route` | Retrieves route coordinates, elevation, and weather forecast data. | None (Public) | None | `200 OK` - Route and weather data object<br>`404 Not Found` |
